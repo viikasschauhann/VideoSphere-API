@@ -2,7 +2,9 @@ import { Video } from "../models/video.model";
 import { asyncHandler } from "../utils/asyncHandler";
 import { ApiError } from "../utils/ApiError";
 
-const getAllVideos = asyncHandler(async (req, res) => {});
+const getAllVideos = asyncHandler(async (req, res) => {
+
+});
 
 const publishVideo = asyncHandler(async (req, res) => {
   const { title, description } = req.body;
@@ -19,29 +21,39 @@ const publishVideo = asyncHandler(async (req, res) => {
   const uploadedVideo = await uploadOnCloudinary(videoLocalPath);
   const uploadedThumbnail = await uploadOnCloudinary(thumbnailLocalPath);
 
-  if(!uploadedVideo?.url || !uploadedThumbnail?.url) {
+  if (!uploadedVideo?.url || !uploadedThumbnail?.url) {
     throw new ApiError(500, "Failed to upload video or thumbnail");
   }
   const video = await Video.create({
-    title, 
+    title,
     description,
     video: uploadedVideo.url,
     thumbnail: uploadedThumbnail.url,
     duration: uploadedVideo.duration,
-    owner: req.user?._id
-  })
+    owner: req.user?._id,
+  });
 
-    if(!video){
-        throw new ApiError(500, "failed to publish video");
-    }
+  if (!video) {
+    throw new ApiError(500, "failed to publish video");
+  }
 
-    return res.
-         status(201)
-         .json(new ApiResponse(201, video, "Video published successfully"));
-
+  return res
+    .status(201)
+    .json(new ApiResponse(201, video, "Video published successfully"));
 });
 
+const getVideoById = asyncHandler(async (req, res) => {
+    const {videoId} = req.params;
+    if(!videoId){
+        throw new ApiError(400, "video id is missing");
+    }
+    const video = await Video.findById(videoId);
+    if(!video){
+        throw new ApiError(400, "video not found");
+    }
+    return res
+        .status(200)
+        .json(new ApiResponse(200, video, "video fetched successfully"))
+})
 
-
-
-export { getAllVideos, publishVideo };
+export { getAllVideos, publishVideo, getVideoById };
